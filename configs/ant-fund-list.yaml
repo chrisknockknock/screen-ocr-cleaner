@@ -1,0 +1,43 @@
+# 蚂蚁金选基金名单录屏 - 测试用例配置
+# 视频来源: EasyStrategy 项目
+# 布局: 手机竖屏录屏，左侧显示基金代码(6位数字)，顶部有导航栏，底部有 Tab 栏
+
+video: "/Users/chrisliang/AI/EasyStrategy/data/蚂蚁金选基金名单2026.7.13.MP4"
+
+output_dir: "/Users/chrisliang/AI/EasyStrategy/data/ocr_output_0713"
+
+frame:
+  fps: 2                    # 每秒抽 2 帧（0.5s 间隔）
+  diff_threshold: 0.012     # 帧差异阈值，跳过几乎相同的帧
+
+ocr:
+  languages: ["ch_sim", "en"]
+  gpu: false
+  # ROI 裁剪: 跳过顶部导航(350px)、底部 Tab 栏(200px)，只取左侧代码列(320px)
+  roi:
+    top: 350
+    bottom: 200
+    left: 0
+    right: 320
+
+extract:
+  patterns:
+    - name: fund_code
+      regex: "(?<!\\d)\\d{6}(?!\\d)"   # 6 位数字（基金代码）
+
+validate:
+  min_detections: 2          # 至少出现在 2 帧
+  max_gap: 3                 # 连续帧最大间隔 3 帧（~1.5s）
+  false_positive_patterns:   # 误识别黑名单
+    - "^(\\d)\\1{5}$"        # 全相同数字: 111111, 222222...
+    - "0{4}$"                # 末尾 4 个 0: 100000, 200000...
+    - "^(123456|654321|012345|543210)$"  # 连续数字
+
+output:
+  format: ["ts", "json"]
+  ts_var_name: "FUND_CODES_0713"
+  sort: true
+  codes_per_line: 8
+
+report:
+  title: "蚂蚁金选基金名单 OCR 清洗报告（2026.7.13）"
