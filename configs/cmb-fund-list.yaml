@@ -1,0 +1,51 @@
+# 招商银行（CMB）基金名单录屏 - 配置模板
+# 使用前请根据实际录屏布局调整以下参数：
+#   1. video: 录屏文件路径
+#   2. frame.fps: 抽帧频率（滚动快则调高，慢则调低）
+#   3. ocr.roi: 根据录屏中数据所在区域调整裁剪
+#   4. extract.patterns: 根据要提取的数据类型调整正则
+#   5. validate: 根据数据特征调整验证阈值
+
+video: "/path/to/招商银行录屏.mp4"
+
+output_dir: "./output_cmb"
+
+frame:
+  fps: 2
+  diff_threshold: 0.012
+
+ocr:
+  languages: ["ch_sim", "en"]
+  gpu: false
+  # ROI 裁剪 - 需根据 CMB App 实际布局调整
+  # 建议先用全图（设 roi: null）跑一次，确认代码位置后再裁剪
+  roi:
+    top: 0          # 顶部裁剪像素
+    bottom: 0       # 底部裁剪像素
+    left: 0         # 左侧裁剪像素
+    right: 0        # 右侧裁剪像素（0 表示不裁剪右侧）
+
+extract:
+  patterns:
+    - name: fund_code
+      regex: "(?<!\\d)\\d{6}(?!\\d)"   # 6 位数字（基金代码）
+    # 如需提取基金名称，可添加:
+    # - name: fund_name
+    #   regex: "[\\u4e00-\\u9fa5]{2,20}"
+
+validate:
+  min_detections: 2
+  max_gap: 3
+  false_positive_patterns:
+    - "^(\\d)\\1{5}$"
+    - "0{4}$"
+    - "^(123456|654321|012345|543210)$"
+
+output:
+  format: ["ts", "json"]
+  ts_var_name: "CMB_FUND_CODES"
+  sort: true
+  codes_per_line: 8
+
+report:
+  title: "招商银行基金名单 OCR 清洗报告"
